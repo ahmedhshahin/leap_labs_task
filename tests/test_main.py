@@ -70,6 +70,10 @@ def test_check_input():
         adversarial_generator._check_input(
             IMAGE_PATH, 1000, EPSILON, DESIRED_COFIDENCE, MAX_ITER
         )
+    with pytest.raises(ValueError):
+        adversarial_generator._check_input(
+            IMAGE_PATH, "cat", EPSILON, DESIRED_COFIDENCE, MAX_ITER
+        )
 
     # Test the function with an incorrect epsilon
     with pytest.raises(ValueError):
