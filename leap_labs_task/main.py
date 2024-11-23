@@ -3,12 +3,16 @@ The main script for generating adversarial examples. We will use torchvision pre
 models on ImageNet dataset.
 """
 
+import logging
 import os
 from typing import Dict, Tuple, Union
 
 import torch
 from torchvision import models
 from torchvision.io import read_image
+
+# pylint: disable=logging-fstring-interpolation
+logging.getLogger("PIL").setLevel(logging.WARNING)
 
 
 class AdversarialGenerator:
@@ -28,6 +32,14 @@ class AdversarialGenerator:
                              Choose from {models.list_models(module=models)}"
             )
 
+        logging.basicConfig(
+            level=logging.DEBUG if verbose else logging.INFO,
+            format="%(asctime)s - %(levelname)s - %(message)s",
+        )
+        logging.info(
+            f"Initializing AdversarialGenerator with model: {pretrained_model}"
+        )
+
         available_weights = torch.hub.load(
             "pytorch/vision", "get_model_weights", name=pretrained_model
         )
@@ -35,12 +47,12 @@ class AdversarialGenerator:
         # if there are multiple weights, we will use the first one
         # TODO: choose the latest one or allow user to choose
         if not available_weights:
-            raise ValueError(
+            logging.error(
                 f"No weights available for {pretrained_model}."
                 "Please choose another model."
             )
         if len(available_weights) > 1:
-            print(
+            logging.warning(
                 f"Multiple weights available for {pretrained_model}."
                 f"Using {available_weights[0]}"
             )
@@ -50,7 +62,7 @@ class AdversarialGenerator:
         self.preprocess = self.weight.transforms(antialias=True)
         self.categories = self.weight.meta["categories"]
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        print(f"Using device: {self.device}")
+        logging.info(f"Using device: {self.device}")
         self.model.to(self.device)
         self.model.eval()
         self.verbose = verbose
@@ -112,23 +124,23 @@ class AdversarialGenerator:
         """
         # check image_path
         if not isinstance(image_path, str):
-            raise ValueError("image_path must be a string")
+            logging.error("image_path must be a string")
         if not image_path.lower().endswith((".jpg", ".jpeg", ".png")):
-            raise ValueError("image_path must be a path to a .jpg, .jpeg, or .png file")
+            logging.error("image_path must be a path to a .jpg, .jpeg, or .png file")
         if not os.path.exists(image_path):
-            raise ValueError("image_path does not exist")
+            logging.error("image_path does not exist")
 
         # check target_class
         if not isinstance(target_class, (str, int)):
-            raise ValueError(
+            logging.error(
                 "target_class must be a string or an integer between 0 and 999"
             )
         if isinstance(target_class, int):
             if not 0 <= target_class < 1000:
-                raise ValueError("target_class must be an integer between 0 and 999")
+                logging.error("target_class must be an integer between 0 and 999")
         else:
             if target_class not in self.categories:
-                raise ValueError(
+                logging.error(
                     "target_class must be one of the classes in the ImageNet dataset.\
                                  See https://github.com/EliSchwartz/imagenet-sample-images"
                 )
@@ -211,7 +223,9 @@ class AdversarialGenerator:
         score = 0.0
         for i in range(max_iter):
             if score > desired_confidence:
-                print(f"Desired confidence reached in {i} iterations.")
+                logging.info(
+                    f"Desired confidence of {desired_confidence} reached in {i} iterations"
+                )
                 break
 
             gen_image.requires_grad_()
@@ -223,7 +237,9 @@ class AdversarialGenerator:
             gen_image = (gen_image + gen_image.grad * epsilon).detach()
 
             if self.verbose:
-                print(f"Iteration {i}: probability for {target_class} is {score}")
+                logging.info(
+                    f"Iteration {i}: probability for {target_class} is {score}"
+                )
 
         # get the final prediction
         target_class, target_confidence = self._get_prediction(gen_image)
