@@ -29,3 +29,28 @@ The user will provide an image and specify a target class and optionally specify
 The example below shows the original image, the target class, and the altered image. The altered image is classified as the target class by the model with high confidence.
 ![Example](https://raw.githubusercontent.com/ahmedhshahin/leap_labs_task/main/example.png)
 
+### Usage
+The package can be installed using pip:
+```
+pip install leap-labs-task
+```
+
+From python, the user can then run the program by providing the path to the image, the target class, and optionally the number of iterations, the step size, and the threshold for the probability of the target class. The program will output the altered image and the probability of the target class.
+
+Example:
+```
+from leap_labs_task import AdversarialGenerator, show_images
+
+image_path = '/path/to/image.jpg'
+target_class = 'goldfish'
+iterations = 100
+epsilon = 0.01
+desired_confidence = 0.9
+pretrained_model = 'resnet50'
+
+generator = AdversarialGenerator(pretrained_model)
+output = generator(image_path, target_class, epsilon, desired_confidence, iterations)
+show_images(output)
+```
+
+The values of `iterations`, `epsilon`, and `desired_confidence` might need to be adjusted based on the image and the target class to achieve the desired result.
