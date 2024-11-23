@@ -27,5 +27,5 @@ The user will provide an image and specify a target class and optionally specify
 
 ### Sample output
 The example below shows the original image, the target class, and the altered image. The altered image is classified as the target class by the model with high confidence.
-![Example](example.png)
+![Example](https://raw.githubusercontent.com/ahmedhshahin/leap_labs_task/main/example.png)
 
