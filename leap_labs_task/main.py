@@ -67,7 +67,7 @@ class AdversarialGenerator:
         self.model.eval()
         self.verbose = verbose
 
-    def _get_prediction(self, image: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _get_prediction(self, image: torch.Tensor) -> Tuple[int, float]:
         """
         Get the model's prediction for the image and the confidence for the prediction
         (the softmax probability).
@@ -76,8 +76,8 @@ class AdversarialGenerator:
             image (torch.Tensor): The image tensor (3xHxW).
 
         Returns:
-            torch.Tensor: The predicted class index.
-            torch.Tensor: The model's confidence for the predicted class.
+            Tuple[int, float]: The predicted class index and the confidence
+                (probability).
         """
         prob = self.model(image).squeeze(0).softmax(dim=0)
         confidence, predicted_class = prob.max(dim=0)
@@ -124,23 +124,23 @@ class AdversarialGenerator:
         """
         # check image_path
         if not isinstance(image_path, str):
-            logging.error("image_path must be a string")
+            raise ValueError("image_path must be a string")
         if not image_path.lower().endswith((".jpg", ".jpeg", ".png")):
-            logging.error("image_path must be a path to a .jpg, .jpeg, or .png file")
+            raise ValueError("image_path must be a path to a .jpg, .jpeg, or .png file")
         if not os.path.exists(image_path):
-            logging.error("image_path does not exist")
+            raise FileNotFoundError(f"File not found: {image_path}")
 
         # check target_class
         if not isinstance(target_class, (str, int)):
-            logging.error(
+            raise ValueError(
                 "target_class must be a string or an integer between 0 and 999"
             )
         if isinstance(target_class, int):
             if not 0 <= target_class < 1000:
-                logging.error("target_class must be an integer between 0 and 999")
+                raise ValueError("target_class must be an integer between 0 and 999")
         else:
             if target_class not in self.categories:
-                logging.error(
+                raise ValueError(
                     "target_class must be one of the classes in the ImageNet dataset.\
                                  See https://github.com/EliSchwartz/imagenet-sample-images"
                 )
@@ -148,14 +148,20 @@ class AdversarialGenerator:
         # check epsilon
         if not isinstance(epsilon, float):
             raise ValueError("epsilon must be a float")
+        if epsilon <= 0:
+            raise ValueError("epsilon must be greater than 0")
 
         # check desired_confidence
         if not isinstance(desired_confidence, float):
             raise ValueError("desired_confidence must be a float")
+        if not 0 <= desired_confidence <= 1:
+            raise ValueError("desired_confidence must be between 0 and 1")
 
         # check max_iter
         if not isinstance(max_iter, int):
             raise ValueError("max_iter must be an integer")
+        if max_iter <= 0:
+            raise ValueError("max_iter must be greater than 0")
 
     def generate_adversarial_image(
         self,
@@ -177,8 +183,8 @@ class AdversarialGenerator:
                 classes in the ImageNet dataset. See
                 https://github.com/EliSchwartz/imagenet-sample-images
             epsilon (float): the image $x$ is updates as
-                $x = x + \epsilon * \frac{d log f(x)}{dx}$, where $f(x)$ is the model's
-                predicted probability for the target class. So $\epsilon$ is the step
+                $x = x + epsilon * \frac{d log f(x)}{dx}$, where $f(x)$ is the model's
+                predicted probability for the target class. So $epsilon$ is the step
                 size for the gradient ascent (think of it as the learning rate). Default
                 is 0.01.
             desired_confidence (float): The desired confidence of the model for the
