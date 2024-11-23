@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "leap-labs-task"
+version = "0.1.0"
+description = "Ahmed Shahin submission for leap labs task -- adversarial noise"
+authors = ["ahmedhshahin <ahmed.shahin.19@ucl.ac.uk>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
