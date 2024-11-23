@@ -246,7 +246,7 @@ class AdversarialGenerator:
                 logging.info(
                     f"Iteration {i}: probability for {target_class} is {score}"
                 )
-        
+
         # get the final prediction
         target_class, target_confidence = self._get_prediction(gen_image)
         if target_confidence < desired_confidence:
@@ -255,10 +255,9 @@ class AdversarialGenerator:
             )
         if target_class != target_class_index:
             logging.warning(
-                f"Model did not predict the target class {target_class} correctly"
+                f"Model did not predict the target class {target_class} correctly " 
                 "Please consider tuning the epsilon and max_iter parameters"
             )
-
 
         gen_image = self._denormalize_image(gen_image.squeeze(0).cpu())
         orgn_image = self._denormalize_image(orgn_image.squeeze(0).cpu())
